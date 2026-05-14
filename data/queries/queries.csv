@@ -1,0 +1,6 @@
+query_id,query,intent,target_article,expected_answer_points,priority
+q001,What is Generative Engine Optimization?,definition,geo_intro,"GEO improves how AI systems discover retrieve cite and summarize brand content",high
+q002,How is GEO different from SEO?,comparison,geo_intro,"SEO targets search engines while GEO targets AI retrieval citation and answer generation",high
+q003,How can businesses improve AI citation readiness?,how_to,geo_intro,"clear definitions schema structured claims entity consistency",high
+q004,Which platforms does GEO-ALPHA focus on?,platform,geo_intro,"ChatGPT Gemini Perplexity Google AI Overviews",medium
+q005,How does GEO-ALPHA measure AI visibility?,measurement,geo_intro,"retrieval ranking citation tracking answer grounding entity coverage",high

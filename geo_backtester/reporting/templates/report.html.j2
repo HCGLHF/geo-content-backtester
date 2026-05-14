@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>GEO Content Backtester Report</title>
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; color: #202124; background: #f7f8fa; }
+    main { max-width: 1180px; margin: 0 auto; padding: 32px 24px 56px; }
+    h1, h2, h3 { color: #111827; }
+    h1 { margin-bottom: 6px; }
+    section { margin-top: 28px; padding: 24px; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { padding: 9px 10px; border-bottom: 1px solid #e5e7eb; text-align: left; vertical-align: top; }
+    th { background: #f3f4f6; font-weight: 700; }
+    .score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+    .score { padding: 16px; border: 1px solid #d1d5db; border-radius: 8px; background: #fafafa; }
+    .score strong { display: block; font-size: 30px; line-height: 1.2; color: #0f766e; }
+    .muted { color: #6b7280; }
+    .chunk { margin: 12px 0; padding: 12px; border-left: 4px solid #0f766e; background: #f8fafc; }
+    .weak { border-left-color: #b91c1c; }
+    .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #e0f2fe; font-size: 12px; }
+    ul { margin-top: 8px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>GEO Content Backtester Report</h1>
+  <p class="muted">Local old vs new article retrieval and citation readiness evaluation.</p>
+
+  <section>
+    <h2>Executive Summary</h2>
+    <div class="score-grid">
+      <div class="score"><span>Old GEO Score</span><strong>{{ score_summary.old.total_geo_score }}</strong></div>
+      <div class="score"><span>New GEO Score</span><strong>{{ score_summary.new.total_geo_score }}</strong></div>
+      <div class="score"><span>Improvement</span><strong>{{ score_summary.improvement.absolute_delta }}</strong></div>
+      <div class="score"><span>Winner</span><strong>{{ score_summary.improvement.winner }}</strong></div>
+      {% if score_summary.core_term_enabled %}
+        <div class="score"><span>Old Core Terms</span><strong>{{ score_summary.old.core_term_score }}</strong></div>
+        <div class="score"><span>New Core Terms</span><strong>{{ score_summary.new.core_term_score }}</strong></div>
+      {% endif %}
+    </div>
+    {% if score_summary.mode == "realistic" %}
+      <p class="muted">Realistic mode: old, new, and background distractor chunks compete in one RAG-style retrieval corpus. Manual labels override heuristic relevance.</p>
+      <p>
+        Label coverage: {{ score_summary.label_coverage.labeled_query_count }}/{{ score_summary.label_coverage.query_count }} queries
+        ({{ score_summary.label_coverage.coverage_percent }}%).
+        Background corpus: {{ score_summary.background_corpus_size }} files / {{ score_summary.background_chunk_count }} chunks.
+      </p>
+    {% endif %}
+  </section>
+
+  {% if score_summary.mode == "realistic" %}
+  <section>
+    <h2>Realism Diagnostics</h2>
+    <div class="score-grid">
+      {% for failure_type, count in score_summary.failure_type_counts.items() %}
+        <div class="score"><span>{{ failure_type }}</span><strong>{{ count }}</strong></div>
+      {% endfor %}
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>query_id</th><th>version</th><th>failure_type</th><th>best_candidate</th><th>best_rerank</th><th>best_final</th><th>recommended_action</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for row in failure_rows %}
+        <tr>
+          <td>{{ row.query_id }}</td>
+          <td>{{ row.article_version }}</td>
+          <td><span class="pill">{{ row.failure_type }}</span></td>
+          <td>{{ row.best_candidate_rank }}</td>
+          <td>{{ row.best_rerank_rank }}</td>
+          <td>{{ row.best_final_rank }}</td>
+          <td>{{ row.recommended_action }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  {% endif %}
+
+  {% if score_summary.core_term_enabled %}
+  <section>
+    <h2>Core Term Exposure</h2>
+    <div class="score-grid">
+      {% for version in ["old", "new"] %}
+        <div class="score"><span>{{ version|capitalize }} Stuffing Risk</span><strong>{{ core_term_summary[version].stuffing_risk_score }}</strong></div>
+      {% endfor %}
+    </div>
+    {% for version in ["old", "new"] %}
+      <h3>{{ version|capitalize }}</h3>
+      <p>Covered: {{ core_term_summary[version].covered_core_terms|join(", ") if core_term_summary[version].covered_core_terms else "None" }}</p>
+      <p>Missing must-have terms: {{ core_term_summary[version].missing_must_have_terms|join(", ") if core_term_summary[version].missing_must_have_terms else "None" }}</p>
+      <p>Weak-context terms: {{ core_term_summary[version].weak_context_terms|join(", ") if core_term_summary[version].weak_context_terms else "None" }}</p>
+      <p>Overused terms: {{ core_term_summary[version].overused_terms|join(", ") if core_term_summary[version].overused_terms else "None" }}</p>
+      <p>High-value section terms: {{ core_term_summary[version].high_value_section_terms|join(", ") if core_term_summary[version].high_value_section_terms else "None" }}</p>
+      {% if core_term_summary[version].recommended_safe_insertions %}
+        <ul>
+        {% for rec in core_term_summary[version].recommended_safe_insertions %}
+          <li>{{ rec }}</li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  <section>
+    <h2>Retrieval Performance</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>query_id</th><th>query</th><th>old_rank</th><th>new_rank</th><th>old_hit_at_3</th><th>new_hit_at_3</th><th>old_mrr</th><th>new_mrr</th><th>winner</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in query_rows %}
+        <tr>
+          <td>{{ row.query_id }}</td>
+          <td>{{ row.query }}</td>
+          <td>{{ row.old_rank }}</td>
+          <td>{{ row.new_rank }}</td>
+          <td>{{ row.old_hit_at_3 }}</td>
+          <td>{{ row.new_hit_at_3 }}</td>
+          <td>{{ row.old_mrr }}</td>
+          <td>{{ row.new_mrr }}</td>
+          <td><span class="pill">{{ row.winner }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Query-Level Diagnosis</h2>
+    {% for row in query_rows %}
+      <h3>{{ row.query_id }}: {{ row.query }}</h3>
+      <p class="muted">Rank delta: {{ row.rank_delta }}. Winner: {{ row.winner }}.</p>
+      {% for version in ["old", "new"] %}
+        <strong>{{ version|capitalize }} top chunks</strong>
+        {% for result in hybrid_results_by_version[version][row.query_id][:3] %}
+          <div class="chunk">
+            <strong>{{ result.chunk_id }}</strong> | rank {{ result.rank }} | score {{ "%.3f"|format(result.score) }} | relevant {{ result.is_relevant }}
+            {% if score_summary.mode == "realistic" %}
+              | candidate {{ result.candidate_rank }} | rerank {{ result.rerank_rank }} | final {{ result.final_rank }} | label {{ result.label_source }} / grade {{ result.relevance_grade }}
+              {% if score_summary.core_term_enabled %}
+                | core term {{ "%.2f"|format(result.core_term_context_score * 100) }}
+              {% endif %}
+            {% endif %}
+            <p>{{ result.text[:420] }}...</p>
+          </div>
+        {% endfor %}
+      {% endfor %}
+    {% endfor %}
+  </section>
+
+  <section>
+    <h2>Citation Readiness</h2>
+    <h3>Best citation-worthy chunks</h3>
+    {% for row in citation_rows[:5] %}
+      <div class="chunk">
+        <strong>{{ row.article_version }} / {{ row.chunk_id }}</strong> | {{ row.citation_score }} | {{ row.citation_strength }}
+        <p>{{ row.text_preview }}</p>
+        <p class="muted">{{ row.reasons|join("; ") }}</p>
+      </div>
+    {% endfor %}
+    <h3>Weak chunks</h3>
+    {% for row in citation_rows[-5:] %}
+      <div class="chunk weak">
+        <strong>{{ row.article_version }} / {{ row.chunk_id }}</strong> | {{ row.citation_score }} | {{ row.citation_strength }}
+        <p>{{ row.text_preview }}</p>
+        <p class="muted">{{ row.reasons|join("; ") }}</p>
+      </div>
+    {% endfor %}
+  </section>
+
+  <section>
+    <h2>Entity Coverage</h2>
+    {% for version, result in entity_results.items() %}
+      <h3>{{ version|capitalize }}</h3>
+      <p>Score: <strong>{{ result.entity_score }}</strong></p>
+      <p>Missing entities: {{ result.missing_entities|join(", ") if result.missing_entities else "None" }}</p>
+      <p>Inconsistent terms: {{ result.inconsistent_terms|join(", ") if result.inconsistent_terms else "None" }}</p>
+    {% endfor %}
+  </section>
+
+  <section>
+    <h2>Structure Analysis</h2>
+    {% for version, result in structure_results.items() %}
+      <h3>{{ version|capitalize }}</h3>
+      <p>Score: <strong>{{ result.structure_score }}</strong></p>
+      <p>Issues: {{ result.issues|join("; ") if result.issues else "None" }}</p>
+      <p>Recommendations: {{ result.recommendations|join("; ") if result.recommendations else "None" }}</p>
+    {% endfor %}
+  </section>
+
+  <section>
+    <h2>Recommended Content Actions</h2>
+    <ul>
+      {% for row in query_rows if row.winner == "old" or row.winner == "tie" %}
+        <li>Improve the new article section that should answer: "{{ row.query }}". Add direct answer language and entity-rich claims.</li>
+      {% endfor %}
+      {% for version, result in entity_results.items() if version == "new" %}
+        {% for entity in result.missing_entities[:6] %}
+          <li>Mention {{ entity }} explicitly where it is relevant and factual.</li>
+        {% endfor %}
+      {% endfor %}
+      {% for rec in structure_results.new.recommendations %}
+        <li>{{ rec }}</li>
+      {% endfor %}
+      <li>Rewrite vague positioning paragraphs into citable claims with clear subjects, definitions, examples, and measurements.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Raw Outputs</h2>
+    <ul>
+      <li>retrieval_results.csv</li>
+      <li>citation_results.csv</li>
+      <li>answer_results.csv</li>
+      <li>core_term_results.csv</li>
+      <li>core_term_summary.json</li>
+      <li>score_summary.json</li>
+      <li>entity_results.json</li>
+      <li>structure_results.json</li>
+    </ul>
+  </section>
+</main>
+</body>
+</html>

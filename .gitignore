@@ -1,0 +1,47 @@
+# Local secrets and environment files
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+id_rsa*
+credentials*
+secrets*
+tokens*
+
+# Python caches and local tooling
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments and local installs
+.venv/
+venv/
+env/
+ENV/
+site-packages/
+
+# Generated outputs
+outputs/runs/
+*.log
+
+# Local model/vector artifacts
+*.faiss
+*.index
+*.sqlite
+*.sqlite3
+chroma/
+.chromadb/
+models/
+model_cache/
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

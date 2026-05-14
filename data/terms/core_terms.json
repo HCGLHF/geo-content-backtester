@@ -1,0 +1,76 @@
+{
+  "must_have_terms": [
+    {
+      "term": "Generative Engine Optimization",
+      "aliases": ["GEO"],
+      "weight": 10,
+      "type": "core_topic",
+      "must_explain": true,
+      "preferred_sections": ["h1", "definition", "summary"]
+    },
+    {
+      "term": "AI search visibility",
+      "weight": 9,
+      "type": "capability",
+      "must_explain": true,
+      "preferred_sections": ["definition", "summary"]
+    },
+    {
+      "term": "citation readiness",
+      "weight": 9,
+      "type": "capability",
+      "must_explain": true,
+      "preferred_sections": ["h2", "faq"]
+    },
+    {
+      "term": "retrieval ranking analysis",
+      "weight": 8,
+      "type": "capability",
+      "must_explain": true,
+      "preferred_sections": ["h2", "summary"]
+    }
+  ],
+  "should_have_terms": [
+    {
+      "term": "entity optimization",
+      "weight": 7,
+      "type": "capability",
+      "must_explain": true
+    },
+    {
+      "term": "AI visibility scoring",
+      "weight": 7,
+      "type": "capability",
+      "must_explain": true
+    },
+    {
+      "term": "ChatGPT",
+      "weight": 5,
+      "type": "platform",
+      "must_explain": false
+    },
+    {
+      "term": "Gemini",
+      "weight": 5,
+      "type": "platform",
+      "must_explain": false
+    },
+    {
+      "term": "Perplexity",
+      "weight": 5,
+      "type": "platform",
+      "must_explain": false
+    },
+    {
+      "term": "Google AI Overviews",
+      "aliases": ["AI Overviews", "Google AIO"],
+      "weight": 5,
+      "type": "platform",
+      "must_explain": false
+    }
+  ],
+  "stuffing_limits": {
+    "max_repeated_credit_per_term": 2,
+    "penalty_threshold": 4
+  }
+}

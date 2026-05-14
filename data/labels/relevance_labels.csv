@@ -1,0 +1,11 @@
+query_id,article_version,chunk_id_or_heading,relevance_grade,answer_support_grade,citation_worthy,notes
+q001,old,old_chunk_001,1,1,false,Old version is too vague for definition.
+q001,new,Definition,3,3,true,New definition directly answers the query.
+q002,old,GEO and SEO,1,1,false,Old comparison is shallow.
+q002,new,GEO vs SEO,3,3,true,New comparison names retrieval citation and answer generation.
+q003,old,old_chunk_001,0,0,false,Old article lacks citation readiness details.
+q003,new,citation readiness,3,3,true,New article explains definitions schema and entities.
+q004,old,old_chunk_001,0,0,false,Old version does not name platforms.
+q004,new,Which platforms matter,3,3,true,New FAQ lists target platforms.
+q005,old,Measuring AI Visibility,1,1,false,Old measurement is generic.
+q005,new,How GEO-ALPHA Measures AI Visibility,3,3,true,New measurement section lists concrete signals.

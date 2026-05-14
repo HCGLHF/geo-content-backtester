@@ -1,0 +1,15 @@
+pandas
+numpy
+scikit-learn
+rank-bm25
+beautifulsoup4
+markdown
+tiktoken
+sentence-transformers
+faiss-cpu
+jinja2
+pydantic
+pytest
+openai
+streamlit
+plotly

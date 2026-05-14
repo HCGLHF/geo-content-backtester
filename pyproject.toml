@@ -1,0 +1,9 @@
+[project]
+name = "geo-backtester"
+version = "0.1.0"
+description = "Local GEO content backtesting MVP"
+requires-python = ">=3.10"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

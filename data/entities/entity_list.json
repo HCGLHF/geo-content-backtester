@@ -1,0 +1,24 @@
+{
+  "brand_entities": [
+    "GEO-ALPHA",
+    "alphaxxxx.com"
+  ],
+  "core_topic_entities": [
+    "Generative Engine Optimization",
+    "GEO",
+    "AI search",
+    "LLM retrieval",
+    "citation readiness",
+    "AI visibility scoring",
+    "retrieval ranking analysis",
+    "structured data",
+    "schema markup"
+  ],
+  "platform_entities": [
+    "ChatGPT",
+    "Claude",
+    "Gemini",
+    "Perplexity",
+    "Google AI Overviews"
+  ]
+}
