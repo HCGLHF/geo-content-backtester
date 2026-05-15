@@ -54,6 +54,8 @@ class BM25Retriever:
                 text=chunk.text,
                 article_id=chunk.article_id,
                 source_type=chunk.source_type,
+                title=chunk.title,
+                heading_path=chunk.heading_path,
             )
             for rank, (chunk, score) in enumerate(scored[:top_k], start=1)
         ]

@@ -5,7 +5,7 @@ from pathlib import Path
 
 import streamlit as st
 
-from geo_backtester.cli import run_backtest
+from geo_backtester.pipeline import run_backtest
 
 
 st.set_page_config(page_title="GEO Content Backtester", layout="wide")

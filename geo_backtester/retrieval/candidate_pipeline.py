@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from types import SimpleNamespace
 
 from geo_backtester.config import BacktestConfig
 from geo_backtester.evaluation.core_term_eval import CoreTermConfig, chunk_core_term_context_score
@@ -85,11 +86,7 @@ def version_metric_view(results_by_query: dict[str, list[RetrievalResult]], vers
 
 
 def _result_as_chunk_text(result: RetrievalResult) -> object:
-    class _ChunkLike:
-        text = result.text
-        heading_path: list[str] = []
-
-    return _ChunkLike()
+    return SimpleNamespace(text=result.text, heading_path=result.heading_path)
 
 
 def _mrr(results: list[RetrievalResult]) -> float:

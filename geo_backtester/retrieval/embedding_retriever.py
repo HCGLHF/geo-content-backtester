@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import logging
 from typing import Protocol
 
 import numpy as np
@@ -9,6 +10,9 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 from geo_backtester.config import BacktestConfig
 from geo_backtester.models import Chunk, Query, RetrievalResult
+
+
+logger = logging.getLogger(__name__)
 
 
 class Embedder(Protocol):
@@ -61,11 +65,11 @@ def build_embedder(chunks: list[Chunk], config: BacktestConfig) -> Embedder:
         try:
             return OpenAIEmbedder(config.openai_embedding_model)
         except Exception as exc:
-            print(f"OpenAI embeddings unavailable, falling back locally: {exc}")
+            logger.warning("OpenAI embeddings unavailable, falling back locally: %s", exc)
     try:
         return SentenceTransformerEmbedder(config.sentence_transformer_model)
     except Exception as exc:
-        print(f"Sentence-transformers unavailable, falling back to TF-IDF embeddings: {exc}")
+        logger.warning("Sentence-transformers unavailable, falling back to TF-IDF embeddings: %s", exc)
         return TfidfEmbedder(corpus)
 
 
@@ -96,6 +100,8 @@ class EmbeddingRetriever:
                     text=chunk.text,
                     article_id=chunk.article_id,
                     source_type=chunk.source_type,
+                    title=chunk.title,
+                    heading_path=chunk.heading_path,
                 )
             )
         return results

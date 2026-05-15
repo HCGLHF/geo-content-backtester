@@ -59,6 +59,8 @@ class HybridRetriever:
                     text=chunk.text,
                     article_id=chunk.article_id,
                     source_type=chunk.source_type,
+                    title=chunk.title,
+                    heading_path=chunk.heading_path,
                 )
             )
         return results

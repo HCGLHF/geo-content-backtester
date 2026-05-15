@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 from dataclasses import replace
 
 from geo_backtester.models import Query, RetrievalResult
 from geo_backtester.retrieval.tokenize import simple_tokenize
+
+
+logger = logging.getLogger(__name__)
 
 
 class LocalReranker:
@@ -27,7 +31,7 @@ class LocalReranker:
                 self.openai_client = OpenAI()
                 return
             except Exception as exc:
-                print(f"OpenAI reranker unavailable, falling back locally: {exc}")
+                logger.warning("OpenAI reranker unavailable, falling back locally: %s", exc)
         if not use_cross_encoder:
             return
         try:
@@ -35,7 +39,7 @@ class LocalReranker:
 
             self.cross_encoder = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
         except Exception as exc:
-            print(f"Cross-encoder reranker unavailable, falling back to local heuristic rerank: {exc}")
+            logger.warning("Cross-encoder reranker unavailable, falling back to local heuristic rerank: %s", exc)
 
     def rerank(self, query: Query, candidates: list[RetrievalResult], top_k: int = 10) -> list[RetrievalResult]:
         if not candidates:
@@ -114,7 +118,7 @@ class LocalReranker:
                 reverse=True,
             )
         except Exception as exc:
-            print(f"OpenAI rerank failed, falling back to local heuristic: {exc}")
+            logger.warning("OpenAI rerank failed, falling back to local heuristic: %s", exc)
             return [(candidate, self._heuristic_score(query, candidate)) for candidate in candidates]
 
     def _citation_quality_score(self, text: str) -> float:

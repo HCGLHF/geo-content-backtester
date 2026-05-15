@@ -81,6 +81,8 @@ class RetrievalResult:
     citation_worthy: bool | None = None
     label_source: str = "heuristic"
     core_term_context_score: float = 0.0
+    title: str = ""
+    heading_path: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)

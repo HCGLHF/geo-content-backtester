@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 from statistics import mean
 
@@ -8,11 +9,18 @@ from geo_backtester.evaluation.failure_analysis import expected_terms_missing, u
 from geo_backtester.models import Query, RetrievalResult
 
 
+logger = logging.getLogger(__name__)
+
+
 def openai_available() -> bool:
     return bool(os.getenv("OPENAI_API_KEY"))
 
 
-def skip_answer_evaluation(queries: list[Query], versions: list[str]) -> tuple[list[dict[str, object]], dict[str, None]]:
+def skip_answer_evaluation(
+    queries: list[Query],
+    versions: list[str],
+    reason: str = "Skipped because OPENAI_API_KEY is not available.",
+) -> tuple[list[dict[str, object]], dict[str, None]]:
     rows = [
         {
             "query_id": query.query_id,
@@ -21,7 +29,7 @@ def skip_answer_evaluation(queries: list[Query], versions: list[str]) -> tuple[l
             "overall_answer_score": None,
             "unsupported_claim_count": None,
             "missing_expected_points": None,
-            "explanation": "Skipped because OPENAI_API_KEY is not available.",
+            "explanation": reason,
         }
         for query in queries
         for version in versions
@@ -38,8 +46,13 @@ def evaluate_answers_with_openai(
 
     try:
         from openai import OpenAI
-    except Exception:
-        return skip_answer_evaluation(queries, list(hybrid_results_by_version))
+    except Exception as exc:
+        logger.warning("OpenAI package unavailable; skipping answer evaluation: %s", exc)
+        return skip_answer_evaluation(
+            queries,
+            list(hybrid_results_by_version),
+            f"Skipped because OpenAI client is unavailable: {exc}",
+        )
 
     client = OpenAI()
     rows: list[dict[str, object]] = []
@@ -49,8 +62,23 @@ def evaluate_answers_with_openai(
         for query in queries:
             chunks = by_query.get(query.query_id, [])[:5]
             context = "\n\n".join(f"[{result.chunk_id}] {result.text}" for result in chunks)
-            answer = _generate_answer(client, query.query, context)
-            judge = _judge_answer(client, query, context, answer)
+            try:
+                answer = _generate_answer(client, query.query, context)
+                judge = _judge_answer(client, query, context, answer)
+            except Exception as exc:
+                logger.warning("OpenAI answer evaluation failed for %s/%s: %s", version, query.query_id, exc)
+                rows.append(
+                    {
+                        "query_id": query.query_id,
+                        "article_version": version,
+                        "answer": None,
+                        "overall_answer_score": None,
+                        "unsupported_claim_count": None,
+                        "missing_expected_points": None,
+                        "explanation": f"OpenAI answer evaluation failed: {exc}",
+                    }
+                )
+                continue
             judge.setdefault("unsupported_claim_count", unsupported_claim_count(answer))
             judge.setdefault("missing_expected_points", expected_terms_missing(query.expected_answer_points, answer))
             score = float(judge.get("overall_answer_score", 0))
